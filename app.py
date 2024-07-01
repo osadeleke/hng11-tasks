@@ -53,18 +53,22 @@ def hello():
         GET /api/hello?visitor_name=JohnDoe
     """
     visitor = request.args.get('visitor_name').strip('"')
-    client_ip = request.headers.getlist("X-Forwarded-For")[0]
-
+    # client_ip = request.headers.getlist("X-Forwarded-For")[0]
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     response = requests.get(f'http://ip-api.com/json/{client_ip}')
     location_data = response.json()
     city = location_data.get('city')
 
-    weather = requests.get(
-        f'http://api.openweathermap.org/data/2.5/weather',
-        params={'q': city, 'appid': OPENWEATHER_API_KEY, 'units': 'metric'}
-    )
-    weather_data = weather.json()
-    temperature = weather_data['main']['temp']
+    if city != None:
+        weather = requests.get(
+            f'http://api.openweathermap.org/data/2.5/weather',
+            params={'q': city, 'appid': OPENWEATHER_API_KEY, 'units': 'metric'}
+        )
+        weather_data = weather.json()
+        temperature = weather_data['main']['temp']
+    else:
+        city = 'Unknown'
+        temperature = 'Unknown'
 
     greet1 = f'Hello, {visitor}!, the temperature '
     greet2 = f'is {temperature} degrees Celsius in {city}'
